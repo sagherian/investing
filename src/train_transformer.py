@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from src.transformer_model import StockPriceTransformer
+from model_def import StockPriceTransformer
 
 def create_sequences(data, seq_length):
     xs, ys = [], []
