@@ -4,10 +4,10 @@ import numpy as np
 import yfinance as yf
 
 # Download historical data for context tickers and apply technical indicators
-def download_and_enrich_data(tickers: dict, start='2010-01-01', end='2025-06-15'):
+def download_and_enrich_data(tickers: dict, period = 'max', interval='1d'):
     context_data = {}
     for name, ticker in tickers.items():
-        df = yf.download(ticker, start=start, end=end)
+        df = yf.download(ticker, period = period, interval=interval, progress=False)
         df = enrich_with_technical_indicators(df)
         context_data[name] = df
     return context_data
