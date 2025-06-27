@@ -7,7 +7,7 @@ import yfinance as yf
 def download_and_enrich_data(tickers: dict, period = 'max', interval='1d'):
     context_data = {}
     for name, ticker in tickers.items():
-        df = yf.download(ticker, period = period, interval=interval, progress=False)
+        df = yf.download(ticker, period=period, interval=interval, progress=False)
         df = enrich_with_technical_indicators(df)
         context_data[name] = df
     return context_data
