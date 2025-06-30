@@ -5,7 +5,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.abspath("../src"))
-from data_prep_utils import *
+from technical_indicators import *
 import pytest
 
 
