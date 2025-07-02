@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import math
 
 
 class AttentionPooling(nn.Module):
@@ -97,3 +98,46 @@ class MultiResolutionTransformer(nn.Module):
         conf_pred = self.fc_conf(combined_feat)
 
         return price_pred, conf_pred
+
+
+class DeltaSenseTransformer(nn.Module):
+    """
+    A transformer-based classifier for multi-horizon, multi-class crypto price movement prediction.
+    Outputs logits for each horizon and class.
+    """
+    def __init__(self, input_dim, seq_len, n_horizons=6, n_classes=6, d_model=64, nhead=4, num_layers=3, dim_feedforward=128, dropout=0.1):
+        super().__init__()
+        self.input_proj = nn.Linear(input_dim, d_model)
+        self.pos_encoder = PositionalEncoding(d_model, dropout, max_len=seq_len)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead, dim_feedforward=dim_feedforward, dropout=dropout, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.head = nn.Linear(d_model, n_horizons * n_classes)
+        self.n_horizons = n_horizons
+        self.n_classes = n_classes
+
+    def forward(self, x):
+        # x: (batch, seq_len, input_dim)
+        x = self.input_proj(x)
+        x = self.pos_encoder(x)
+        x = self.transformer_encoder(x)
+        x = x[:, -1, :]  # Use last token
+        logits = self.head(x)
+        logits = logits.view(-1, self.n_horizons, self.n_classes)
+        return logits
+
+
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, dropout=0.1, max_len=5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        x = x + self.pe[:, :x.size(1), :]
+        return self.dropout(x)
