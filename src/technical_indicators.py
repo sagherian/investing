@@ -11,10 +11,12 @@ def enrich_with_technical_indicators(df):
     df = compute_rsi(df)                                # RSI
     df = compute_obv(df)                                # On-Balance Volume
     df = compute_atr(df)                                # Average True Range
-    df = compute_mfi(df)                                # Money Flow Index
-    df = compute_historical_volatility(df)              # Historical Volatility
-    df = compute_donchian_channels(df)                  # Donchian Channels
-    df = compute_z_score(df)                            # Z-Score
+    df = compute_mfi(df)  
+    df = compute_price_to_all_time_high(df)
+    df = compute_volume_to_all_time_high(df)                              # Money Flow Index
+    # df = compute_historical_volatility(df)              # Historical Volatility
+    # df = compute_donchian_channels(df)                  # Donchian Channels
+    # df = compute_z_score(df)                            # Z-Score
     df = df.replace([np.inf, -np.inf], np.nan).dropna()
     return df
 
@@ -113,3 +115,21 @@ def compute_z_score(df, column='Close', window=20):
     rolling_std = df[column].rolling(window).std()
     df['Z_Score'] = (df[column] - rolling_mean) / rolling_std
     return df
+
+def compute_price_to_all_time_high(df, column='Close'):
+    """
+    Computes the price to all-time high ratio.
+    """
+    all_time_high = df[column].cummax()
+    df['Price_to_All_Time_High'] = df[column] / all_time_high
+    return df
+
+def compute_volume_to_all_time_high(df, volume_column='Volume'):
+    """
+    Computes the volume to all-time high ratio.
+    """
+    all_time_high_volume = df[volume_column].cummax()
+    df['Volume_to_All_Time_High'] = df[volume_column] / all_time_high_volume
+    return df
+
+
